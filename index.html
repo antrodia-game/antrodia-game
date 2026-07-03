@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>牛樟芝培育園</title>
+<style>
+  :root{
+    --bg:#F5EFE4; --card:#FFFDF8; --ink:#3A322A; --muted:#8A7F70;
+    --line:#E4D9C6; --terra:#C8663B; --terra-soft:#F0D9C9;
+    --gold:#D9A63C; --gold-soft:#F5E6C4;
+    --common:#9C8A6E; --rare:#3E88B0; --epic:#8B5FB5; --legend:#D98A2C;
+    --common-bg:#EDE7DA; --rare-bg:#DAEBF3; --epic-bg:#EADDF3; --legend-bg:#F8E8C8;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    line-height:1.6; padding:20px 24px; max-width:1280px; margin:0 auto;
+  }
+  h1{font-size:22px; font-weight:700; margin:0 0 2px; letter-spacing:1px;}
+  .sub{font-size:13px; color:var(--muted); margin-bottom:16px;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:12px 16px; margin-bottom:14px; position:sticky; top:8px; z-index:20;
+    box-shadow:0 2px 8px rgba(120,90,50,0.06);
+  }
+  .coin{display:flex; align-items:center; gap:8px; font-size:20px; font-weight:700;}
+  .coin .label{font-size:12px; color:var(--muted); font-weight:400;}
+  .coin-icon{
+    width:26px; height:26px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #F5D97A, var(--gold));
+    border:2px solid #B9871F; display:flex; align-items:center; justify-content:center;
+    font-size:13px; color:#7A5A12; font-weight:700; flex-shrink:0;
+  }
+  button{
+    font-family:inherit; cursor:pointer; border-radius:12px; border:none;
+    font-size:14px; transition:transform .1s, filter .15s;
+  }
+  button:active{transform:scale(0.96);}
+  button:disabled{opacity:0.5; cursor:default;}
+  .btn-primary{background:var(--terra); color:#fff; padding:8px 16px; font-weight:500;}
+  .btn-primary:hover:not(:disabled){filter:brightness(1.06);}
+  .section-title{font-size:15px; font-weight:700; margin:18px 0 10px; display:flex; align-items:center; gap:6px;}
+
+  /* 天氣列 */
+  .weather-bar{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:12px 18px; margin-bottom:14px;
+  }
+  .weather-now{display:flex; align-items:center; gap:8px; font-size:15px; font-weight:700;}
+  .weather-now .wicon{font-size:26px;}
+  .weather-desc{font-size:12px; color:var(--muted); flex:1; min-width:140px;}
+  .pray-btn{background:var(--epic); color:#fff; padding:7px 14px; font-weight:500; font-size:13px;}
+  .pray-btn:hover:not(:disabled){filter:brightness(1.08);}
+  .pray-panel{
+    display:flex; gap:6px; flex-wrap:wrap; width:100%; margin-top:4px;
+    padding-top:10px; border-top:1px dashed var(--line);
+  }
+  .pray-opt{
+    font-size:12px; padding:5px 11px; border-radius:18px; background:var(--bg);
+    border:1px solid var(--line); color:var(--ink); display:flex; align-items:center; gap:4px;
+  }
+  .pray-opt:hover:not(:disabled){border-color:var(--epic); background:var(--epic-bg);}
+
+  /* 濕溫選擇器 */
+  .var-group{width:100%; max-width:340px; margin-bottom:8px;}
+  .var-label{font-size:11px; color:var(--muted); margin-bottom:4px;}
+  .var-btns{display:flex; gap:5px;}
+  .var-btn{
+    flex:1; font-size:12px; padding:6px 4px; border-radius:9px; background:var(--bg);
+    border:1px solid var(--line); color:var(--ink); display:flex; flex-direction:column;
+    align-items:center; gap:1px; line-height:1.2;
+  }
+  .var-btn .vic{font-size:15px;}
+  .var-btn.active{background:var(--terra-soft); border-color:var(--terra); color:var(--terra); font-weight:700;}
+  .tier-hint{
+    font-size:11px; padding:4px 10px; border-radius:12px; margin:2px 0 8px;
+    text-align:center; width:100%; max-width:340px;
+  }
+  .slots{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;}
+  @media(max-width:900px){.slots{grid-template-columns:1fr 1fr;}}
+  @media(max-width:520px){.slots{grid-template-columns:1fr;}}
+  .slot{
+    background:var(--card); border:1px solid var(--line); border-radius:20px;
+    padding:18px; min-height:290px; display:flex; flex-direction:column;
+    align-items:center; position:relative; overflow:hidden;
+  }
+  .slot-label{font-size:13px; color:var(--muted); align-self:flex-start; margin-bottom:8px;}
+  .wood-list{display:flex; flex-direction:column; gap:8px; width:100%; max-width:340px;}
+  .wood-btn{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--bg); border:1px solid var(--line); padding:10px 13px;
+    border-radius:11px; font-size:13px; color:var(--ink);
+  }
+  .wood-btn:hover:not(:disabled){border-color:var(--terra); background:var(--terra-soft);}
+  .wood-btn .wleft{display:flex; align-items:center; gap:9px; text-align:left;}
+  .wood-chip{width:24px; height:24px; border-radius:6px; flex-shrink:0; border:1.5px solid rgba(0,0,0,0.12);}
+  .wood-stars{font-size:10px; color:var(--gold); letter-spacing:-1px;}
+  .wood-price{display:flex; align-items:center; gap:3px; color:var(--muted); font-size:12px; font-weight:500; flex-shrink:0;}
+  .mush-stage{display:flex; align-items:center; justify-content:center; height:130px; margin:4px 0;}
+  .tier-badge{font-size:12px; padding:3px 12px; border-radius:20px; font-weight:700; margin-bottom:2px;}
+  .grow-name{font-size:15px; font-weight:700; margin:7px 0; text-align:center; line-height:1.3;}
+  .progress{width:100%; max-width:300px; height:9px; background:var(--bg); border-radius:6px; overflow:hidden; margin-bottom:10px;}
+  .progress .fill{height:100%; border-radius:6px; transition:width .3s;}
+  .grow-pct{font-size:13px; color:var(--muted);}
+  .harvest-btn{width:100%; max-width:300px; background:var(--gold); color:#5A4210; padding:10px; font-weight:700; font-size:14px;}
+  .harvest-btn:hover{filter:brightness(1.05);}
+  .water-btn{
+    position:absolute; top:10px; right:10px; width:38px; height:38px; border-radius:50%;
+    background:var(--rare); color:#fff; font-size:19px; display:flex;
+    align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(62,136,176,0.45);
+    animation:bob .7s ease-in-out infinite; z-index:5;
+  }
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+  @keyframes pop{0%{transform:scale(0.7); opacity:0;}60%{transform:scale(1.12);}100%{transform:scale(1); opacity:1;}}
+  .pop{animation:pop .5s ease;}
+  @keyframes sway{0%,100%{transform:rotate(-3deg);}50%{transform:rotate(3deg);}}
+  .ready .mush-svg{animation:sway 1.4s ease-in-out infinite;}
+
+  /* ===== 拉霸 overlay ===== */
+  .gacha-overlay{
+    position:fixed; inset:0; background:rgba(58,50,42,0.72);
+    display:flex; align-items:center; justify-content:center; z-index:200;
+    opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .gacha-overlay.show{opacity:1; pointer-events:auto;}
+  .gacha-box{
+    background:var(--card); border-radius:24px; padding:22px 18px; width:88%; max-width:440px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.3); text-align:center; position:relative; overflow:hidden;
+  }
+  .gacha-title{font-size:15px; font-weight:700; margin-bottom:4px;}
+  .gacha-wood{font-size:12px; color:var(--muted); margin-bottom:14px;}
+  .reel-window{
+    position:relative; height:132px; overflow:hidden; border-radius:16px;
+    background:var(--bg); border:1px solid var(--line); margin-bottom:8px;
+  }
+  .reel-window::before, .reel-window::after{
+    content:''; position:absolute; top:0; bottom:0; width:46px; z-index:3; pointer-events:none;
+  }
+  .reel-window::before{left:0; background:linear-gradient(90deg, var(--bg), transparent);}
+  .reel-window::after{right:0; background:linear-gradient(270deg, var(--bg), transparent);}
+  .reel-pointer{
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:9px solid transparent; border-right:9px solid transparent;
+    border-top:11px solid var(--terra); z-index:4;
+  }
+  .reel-pointer.bottom{top:auto; bottom:0; border-top:none; border-bottom:11px solid var(--terra);}
+  .reel-track{display:flex; align-items:center; height:100%; will-change:transform;}
+  .reel-card{
+    flex:0 0 110px; height:112px; margin:0 4px; border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:var(--card); border:1px solid var(--line);
+  }
+  .reel-card .rc-name{font-size:10px; margin-top:2px; color:var(--muted);}
+  .gacha-result{min-height:26px; margin-top:6px; font-size:16px; font-weight:700; opacity:0; transition:opacity .3s;}
+  .gacha-result.show{opacity:1;}
+  .gacha-plant-btn{
+    margin-top:12px; background:var(--terra); color:#fff; padding:10px 28px; font-weight:700;
+    opacity:0; pointer-events:none; transition:opacity .3s;
+  }
+  .gacha-plant-btn.show{opacity:1; pointer-events:auto;}
+  @keyframes flashwin{0%,100%{box-shadow:0 0 0 rgba(217,150,60,0);}50%{box-shadow:0 0 30px 6px rgba(217,150,60,0.7);}}
+  .winflash{animation:flashwin 1s ease 2;}
+  .confetti{position:absolute; width:9px; height:14px; top:-20px; z-index:10; border-radius:2px;}
+  @keyframes fall{to{transform:translateY(520px) rotate(540deg); opacity:0;}}
+
+  /* ===== 圖鑑 ===== */
+  .dex-tabs{display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;}
+  .dex-tab{
+    font-size:12px; padding:4px 12px; border-radius:20px; background:var(--card);
+    border:1px solid var(--line); color:var(--muted);
+  }
+  .dex-tab.active{background:var(--terra); color:#fff; border-color:var(--terra);}
+  .collection{display:grid; grid-template-columns:repeat(7,1fr); gap:10px;}
+  @media(max-width:900px){.collection{grid-template-columns:repeat(5,1fr);}}
+  @media(max-width:600px){.collection{grid-template-columns:repeat(3,1fr);}}
+  .col-item{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:10px 4px; display:flex; flex-direction:column; align-items:center; text-align:center;
+  }
+  .col-item.locked{opacity:0.4;}
+  .col-name{font-size:11px; margin-top:4px; line-height:1.25;}
+  .col-count{font-size:11px; font-weight:700; margin-top:1px;}
+  .locked-q{width:48px; height:48px; display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--muted);}
+  .stat-row{display:flex; gap:12px; margin-bottom:4px; max-width:520px;}
+  .stat{flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 10px; text-align:center;}
+  .stat .num{font-size:22px; font-weight:700;}
+  .stat .lbl{font-size:11px; color:var(--muted);}
+  .toast{
+    position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:10px 20px; border-radius:24px; font-size:14px;
+    opacity:0; transition:all .3s; z-index:300; pointer-events:none; max-width:90%; text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .footer{text-align:center; font-size:11px; color:var(--muted); margin-top:24px; padding-bottom:20px;}
+</style>
+</head>
+<body>
+
+<h1>🍄 牛樟芝培育園</h1>
+<div class="sub">選好木頭、拉霸開獎、細心培育,收集 28 種珍稀牛樟芝!</div>
+
+<div class="topbar">
+  <div class="coin">
+    <div class="coin-icon">芝</div>
+    <span id="coinBal">30</span>
+    <span class="label">芝靈幣</span>
+  </div>
+  <button class="btn-primary" id="checkinBtn">今日簽到 +15</button>
+</div>
+
+<div class="weather-bar" id="weatherBar"></div>
+
+<div class="stat-row">
+  <div class="stat"><div class="num" id="statCollected">0</div><div class="lbl">已收集</div></div>
+  <div class="stat"><div class="num" id="statScore">0</div><div class="lbl">收藏總分</div></div>
+  <div class="stat"><div class="num" id="statHarvest">0</div><div class="lbl">累計收成</div></div>
+</div>
+
+<div class="section-title">🌱 培育槽</div>
+<div class="slots" id="slots"></div>
+
+<div class="section-title">📖 品種圖鑑 <span id="dexProgress" style="font-size:12px;color:var(--muted);font-weight:400;"></span></div>
+<div class="dex-tabs" id="dexTabs"></div>
+<div class="collection" id="collection"></div>
+
+<div class="footer">牛樟芝培育園 · 試玩版 · 各品種為遊戲創作,與真實產品無關</div>
+
+<div class="gacha-overlay" id="gachaOverlay">
+  <div class="gacha-box" id="gachaBox">
+    <div class="gacha-title">🎰 培育開獎中…</div>
+    <div class="gacha-wood" id="gachaWood"></div>
+    <div class="reel-window">
+      <div class="reel-pointer"></div>
+      <div class="reel-pointer bottom"></div>
+      <div class="reel-track" id="reelTrack"></div>
+    </div>
+    <div class="gacha-result" id="gachaResult"></div>
+    <button class="gacha-plant-btn" id="gachaPlantBtn">種入培育槽 🌱</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== 資料設定 ===================== */
+
+const woods = [
+  {id:'niuzhang', name:'牛樟木', stars:5, price:22, color:'#8A4B2F',
+   probs:{common:45, rare:28, epic:19, legendary:8}},
+  {id:'xiangzhang', name:'香樟木', stars:4, price:15, color:'#A9673E',
+   probs:{common:58, rare:30, epic:12, legendary:0}},
+  {id:'fangzhang', name:'芳樟木', stars:3, price:9, color:'#BC8557',
+   probs:{common:75, rare:25, epic:0, legendary:0}},
+  {id:'chenxiang', name:'沉香木', stars:2, price:5, color:'#7C6A54',
+   probs:{common:88, rare:12, epic:0, legendary:0}},
+  {id:'xiangshan', name:'香杉木', stars:1, price:2, color:'#C7B48C',
+   probs:{common:97, rare:3, epic:0, legendary:0}}
+];
+
+/* 28 種品種。cap=菌傘色, deco=裝飾類型(依稀有度分級華麗度) */
+const species = [
+  // 普通 8
+  {id:'red',     name:'紅肉牛樟芝', tier:'common', grow:40000,  reward:9,  emoji:'😊', cap:'#C0574A'},
+  {id:'yellow',  name:'黃肉牛樟芝', tier:'common', grow:40000,  reward:9,  emoji:'😄', cap:'#D9A94C'},
+  {id:'pale',    name:'淡菇牛樟芝', tier:'common', grow:39000,  reward:8,  emoji:'🙂', cap:'#CBB98F'},
+  {id:'white',   name:'白絲牛樟芝', tier:'common', grow:38000,  reward:8,  emoji:'😌', cap:'#E2DAC8'},
+  {id:'chenchu', name:'沉香初生芝', tier:'common', grow:40000,  reward:9,  emoji:'😊', cap:'#9C8464'},
+  {id:'cypbud',  name:'檜木嫩芝',   tier:'common', grow:40000,  reward:9,  emoji:'😃', cap:'#B58F5E'},
+  {id:'wuxin',   name:'烏心石芝',   tier:'common', grow:41000,  reward:10, emoji:'🙂', cap:'#7A6A5A'},
+  {id:'xiaonan', name:'肖楠淡芝',   tier:'common', grow:40000,  reward:9,  emoji:'😊', cap:'#C2A878'},
+  // 稀有 8
+  {id:'blood',   name:'血紅牛樟芝', tier:'rare', grow:70000,  reward:22, emoji:'😎', cap:'#A82F2A'},
+  {id:'gold',    name:'金絲牛樟芝', tier:'rare', grow:70000,  reward:22, emoji:'🤩', cap:'#D6A81E'},
+  {id:'fog',     name:'霧夜牛樟芝', tier:'rare', grow:71000,  reward:23, emoji:'😏', cap:'#6E7A82'},
+  {id:'cypress', name:'檜香牛樟芝', tier:'rare', grow:72000,  reward:24, emoji:'😌', cap:'#B5754A'},
+  {id:'sunrise', name:'日出牛樟芝', tier:'rare', grow:70000,  reward:23, emoji:'😊', cap:'#E68A3C'},
+  {id:'rainbow', name:'彩虹牛樟芝', tier:'rare', grow:73000,  reward:25, emoji:'🌈', cap:'#C86FA8'},
+  {id:'wuxinglow',name:'烏心夜光芝',tier:'rare', grow:72000,  reward:24, emoji:'😲', cap:'#4A5A6E'},
+  {id:'xiaonangold',name:'肖楠金邊芝',tier:'rare',grow:71000, reward:23, emoji:'😎', cap:'#B89040'},
+  // 史詩 7
+  {id:'layer',   name:'千層牛樟芝', tier:'epic', grow:110000, reward:48, emoji:'😳', cap:'#8B4F6B'},
+  {id:'ice',     name:'冰晶牛樟芝', tier:'epic', grow:112000, reward:50, emoji:'🥶', cap:'#7FB0C4'},
+  {id:'thunder', name:'雷紋牛樟芝', tier:'epic', grow:111000, reward:49, emoji:'⚡', cap:'#5E5276'},
+  {id:'moon',    name:'滿月牛樟芝', tier:'epic', grow:113000, reward:51, emoji:'🌝', cap:'#D8C86A'},
+  {id:'meteor',  name:'流星牛樟芝', tier:'epic', grow:112000, reward:50, emoji:'💫', cap:'#5A6BA8'},
+  {id:'snow',    name:'初雪牛樟芝', tier:'epic', grow:113000, reward:51, emoji:'❄️', cap:'#C4D2DE'},
+  {id:'hehuan',  name:'合歡秘芝',   tier:'epic', grow:111000, reward:49, emoji:'😯', cap:'#7E9B6A'},
+  // 傳說 5
+  {id:'ancient', name:'千年野生牛樟芝', tier:'legendary', grow:160000, reward:110, emoji:'🤯', cap:'#7A3B1F'},
+  {id:'king',    name:'樟芝之王',       tier:'legendary', grow:165000, reward:120, emoji:'👑', cap:'#B8321F'},
+  {id:'jade',    name:'玉山之心',       tier:'legendary', grow:162000, reward:115, emoji:'💎', cap:'#3E8E7E'},
+  {id:'cloud',   name:'阿里山雲海芝',   tier:'legendary', grow:163000, reward:116, emoji:'☁️', cap:'#8FA6B8'},
+  {id:'snowmt',  name:'雪山萬年根',     tier:'legendary', grow:164000, reward:118, emoji:'🏔️', cap:'#A8BAC8'}
+];
+
+/* 木頭 → 各稀有度可長出的品種池 */
+const poolByWood = {
+  niuzhang:  {common:['red','yellow'], rare:['blood','sunrise'], epic:['layer','thunder','moon','ice','meteor'], legendary:['ancient','king','jade','cloud','snowmt']},
+  xiangzhang:{common:['red','yellow','cypbud'], rare:['blood','cypress','rainbow'], epic:['layer','snow','hehuan'], legendary:[]},
+  fangzhang: {common:['red','yellow','pale','xiaonan'], rare:['gold','xiaonangold','sunrise'], epic:[], legendary:[]},
+  chenxiang: {common:['pale','white','chenchu'], rare:['gold','fog'], epic:[], legendary:[]},
+  xiangshan: {common:['white','pale','wuxin'], rare:['wuxinglow'], epic:[], legendary:[]}
+};
+
+const tierMeta = {
+  common:   {label:'普通', color:'var(--common)', bg:'var(--common-bg)', score:1,  key:'common'},
+  rare:     {label:'稀有', color:'var(--rare)',   bg:'var(--rare-bg)',   score:3,  key:'rare'},
+  epic:     {label:'史詩', color:'var(--epic)',   bg:'var(--epic-bg)',   score:8,  key:'epic'},
+  legendary:{label:'傳說', color:'var(--legend)', bg:'var(--legend-bg)', score:20, key:'legendary'}
+};
+
+/* ===================== 變數系統設定 ===================== */
+/* 濕度 / 溫度 選項 */
+const humidities = [
+  {id:'dry', label:'乾燥', icon:'🏜️'},
+  {id:'mid', label:'適中', icon:'💧'},
+  {id:'wet', label:'潮濕', icon:'🌊'}
+];
+const temperatures = [
+  {id:'low',  label:'低溫', icon:'❄️'},
+  {id:'norm', label:'常溫', icon:'🌤️'},
+  {id:'high', label:'高溫', icon:'🔥'}
+];
+/* 天氣:weight 決定每日隨機出現機率(晴天最常見、流星雨最稀有) */
+const weathers = [
+  {id:'sunny',  label:'晴天',   icon:'☀️', weight:45},
+  {id:'fog',    label:'濃霧',   icon:'🌫️', weight:22},
+  {id:'thunder',label:'打雷',   icon:'⛈️', weight:16},
+  {id:'moon',   label:'滿月',   icon:'🌕', weight:12},
+  {id:'meteor', label:'流星雨', icon:'🌠', weight:5}
+];
+
+/* 解鎖條件表:未列出的品種 = A類自由品種(木頭就能決定,不受濕溫天氣限制)
+   欄位:hum=需要的濕度, temp=需要的溫度, weather=需要的天氣。null=不限。
+   一個品種可同時有多個條件,全部滿足才會進池。 */
+const unlock = {
+  // 稀有:濕溫解鎖
+  blood:      {temp:'high'},
+  cypress:    {hum:'mid'},
+  xiaonangold:{temp:'high', hum:'dry'},
+  // 稀有:天氣解鎖
+  fog:        {weather:'fog'},
+  sunrise:    {weather:'sunny'},
+  rainbow:    {weather:'fog'},        // 雨後感 → 用濃霧日代表
+  wuxinglow:  {weather:'moon'},
+  // 史詩:濕溫解鎖
+  layer:      {hum:'wet'},
+  ice:        {temp:'low', hum:'wet'},
+  snow:       {temp:'low', hum:'dry'},
+  hehuan:     {hum:'mid', temp:'norm'},
+  // 史詩:天氣解鎖
+  thunder:    {weather:'thunder'},
+  moon:       {weather:'moon'},
+  meteor:     {weather:'meteor'},
+  // 傳說:天氣 + 牛樟木(牛樟木限制由 poolByWood 已保證,這裡再加天氣/濕溫)
+  ancient:    {weather:'thunder'},
+  king:       {weather:'moon'},
+  jade:       {weather:'sunny', temp:'low'},
+  cloud:      {weather:'fog'},
+  snowmt:     {weather:'meteor', temp:'low'}
+};
+
+/* ===================== 遊戲狀態 ===================== */
+let coins = 30;
+let checkedIn = false;
+let totalHarvest = 0;
+let gachaBusy = false;
+let dexFilter = 'all';
+let todayWeather = null;   // 今日天氣(啟動時隨機)
+/* 每個培育槽當前的濕溫設定(空槽時玩家用來選) */
+const slotSettings = [
+  {hum:'mid', temp:'norm'},
+  {hum:'mid', temp:'norm'},
+  {hum:'mid', temp:'norm'}
+];
+const dex = {};
+species.forEach(s => dex[s.id] = 0);
+
+const slots = [
+  {wood:null, species:null, start:0, water:false, wTimer:null},
+  {wood:null, species:null, start:0, water:false, wTimer:null},
+  {wood:null, species:null, start:0, water:false, wTimer:null}
+];
+
+/* 依權重隨機抽今日天氣 */
+function rollWeather(){
+  const total = weathers.reduce((s,w) => s + w.weight, 0);
+  let r = Math.random() * total;
+  for(const w of weathers){
+    r -= w.weight;
+    if(r < 0) return w.id;
+  }
+  return weathers[0].id;
+}
+todayWeather = rollWeather();
+
+/* ===================== 判定引擎(變數升級版) ===================== */
+
+/* 檢查某品種在給定條件下是否「合格進池」 */
+function isEligible(spId, hum, temp, weather){
+  const cond = unlock[spId];
+  if(!cond) return true; // A類自由品種,永遠合格
+  if(cond.hum && cond.hum !== hum) return false;
+  if(cond.temp && cond.temp !== temp) return false;
+  if(cond.weather && cond.weather !== weather) return false;
+  return true;
+}
+
+/* 取得某木頭 + 濕溫天氣下,各稀有度的「合格品種」 */
+function eligiblePools(woodId, hum, temp, weather){
+  const pool = poolByWood[woodId];
+  const result = {};
+  ['common','rare','epic','legendary'].forEach(tier => {
+    result[tier] = (pool[tier] || []).filter(id => isEligible(id, hum, temp, weather));
+  });
+  return result;
+}
+
+/* 判定抽取:先依機率選稀有度,若該稀有度合格池為空則往下降級;
+   最終保底至少從 common 合格池抽(common 全是自由品種,不會空) */
+function rollSpecies(woodId, hum, temp, weather){
+  const wood = woods.find(w => w.id === woodId);
+  const elig = eligiblePools(woodId, hum, temp, weather);
+  const r = Math.random() * 100;
+  const order = ['common','rare','epic','legendary'];
+  let acc = 0, chosenTier = 'common';
+  for(const tier of order){
+    acc += wood.probs[tier];
+    if(r < acc){ chosenTier = tier; break; }
+  }
+  // 從選中稀有度往下找第一個「非空的合格池」
+  let candidates = elig[chosenTier];
+  if(!candidates || candidates.length === 0){
+    for(let i = order.indexOf(chosenTier); i >= 0; i--){
+      if(elig[order[i]] && elig[order[i]].length){ candidates = elig[order[i]]; break; }
+    }
+  }
+  // 極端保底:萬一全空(理論上不會,common 都是自由品種),用木頭原始 common 池
+  if(!candidates || candidates.length === 0){
+    candidates = poolByWood[woodId].common;
+  }
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+/* 給 UI 用:當前條件下,這個木頭最高能解鎖到哪個稀有度(用來顯示提示) */
+function highestTierHint(woodId, hum, temp, weather){
+  const elig = eligiblePools(woodId, hum, temp, weather);
+  const wood = woods.find(w => w.id === woodId);
+  const order = ['legendary','epic','rare','common'];
+  for(const tier of order){
+    // 該稀有度有合格品種、且該木頭該稀有度機率 > 0
+    if(elig[tier].length > 0 && wood.probs[tier] > 0){
+      return tier;
+    }
+  }
+  return 'common';
+}
+
+/* ===================== 萌系蘑菇 SVG (依稀有度分級華麗度) ===================== */
+function mushSVG(spId, size){
+  const s = species.find(x => x.id === spId);
+  const tier = s.tier;
+  const glow = tier === 'legendary' ? 'filter:drop-shadow(0 0 10px rgba(217,138,44,0.85));'
+             : tier === 'epic' ? 'filter:drop-shadow(0 0 7px rgba(139,95,181,0.6));'
+             : tier === 'rare' ? 'filter:drop-shadow(0 0 4px rgba(62,136,176,0.4));' : '';
+
+  // 更圓潤飽滿的菌傘 + 粗胖菌柄
+  let deco = '';
+  // 稀有:加斑點
+  if(tier === 'rare'){
+    deco += `<circle cx="38" cy="40" r="3" fill="rgba(255,255,255,0.55)"/>
+             <circle cx="62" cy="44" r="2.5" fill="rgba(255,255,255,0.5)"/>
+             <circle cx="50" cy="34" r="2.2" fill="rgba(255,255,255,0.5)"/>`;
+  }
+  // 史詩:斑點 + 小星星
+  if(tier === 'epic'){
+    deco += `<circle cx="36" cy="40" r="2.8" fill="rgba(255,255,255,0.6)"/>
+             <circle cx="64" cy="42" r="2.5" fill="rgba(255,255,255,0.55)"/>
+             <path d="M50 26 l1.5 3.5 3.8 .4 -2.8 2.6 .8 3.7 -3.3-1.9 -3.3 1.9 .8-3.7 -2.8-2.6 3.8-.4 z" fill="#F5E6A8"/>`;
+  }
+  // 傳說:皇冠 + 光環 + 環繞星芒
+  if(tier === 'legendary'){
+    deco += `<ellipse cx="50" cy="42" rx="40" ry="40" fill="none" stroke="rgba(217,138,44,0.35)" stroke-width="1.5" stroke-dasharray="3 4"/>
+             <path d="M35 17 L41 25 L50 15 L59 25 L65 17 L63 30 L37 30 Z" fill="#F2C84B" stroke="#C89A28" stroke-width="1"/>
+             <circle cx="35" cy="16" r="2.4" fill="#E85A4A"/>
+             <circle cx="50" cy="13" r="2.6" fill="#E85A4A"/>
+             <circle cx="65" cy="16" r="2.4" fill="#E85A4A"/>
+             <path d="M50 30 l1.6 4 4.3 .4 -3.2 3 .9 4.2 -3.6-2.1 -3.6 2.1 .9-4.2 -3.2-3 4.3-.4 z" fill="#FFF0B0"/>
+             <circle cx="22" cy="50" r="1.8" fill="#F5D97A"/>
+             <circle cx="78" cy="50" r="1.8" fill="#F5D97A"/>
+             <circle cx="30" cy="72" r="1.5" fill="#F5D97A"/>
+             <circle cx="70" cy="72" r="1.5" fill="#F5D97A"/>`;
+  }
+
+  return `<svg class="mush-svg" width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="${glow}">
+    <ellipse cx="50" cy="94" rx="27" ry="5" fill="rgba(0,0,0,0.08)"/>
+    <rect x="37" y="56" width="26" height="34" rx="13" fill="#F4EBD9" stroke="#E2D5BC" stroke-width="1.5"/>
+    <path d="M12 56 Q12 20 50 20 Q88 20 88 56 Q88 66 50 66 Q12 66 12 56 Z" fill="${s.cap}"/>
+    <ellipse cx="34" cy="40" rx="9" ry="6" fill="rgba(255,255,255,0.4)"/>
+    ${deco}
+    <circle cx="42" cy="74" r="4.5" fill="#F2B8A8" opacity="0.8"/>
+    <circle cx="58" cy="74" r="4.5" fill="#F2B8A8" opacity="0.8"/>
+    <circle cx="43" cy="66" r="2.8" fill="#3A322A"/>
+    <circle cx="57" cy="66" r="2.8" fill="#3A322A"/>
+    <circle cx="44.2" cy="65" r="0.9" fill="#fff"/>
+    <circle cx="58.2" cy="65" r="0.9" fill="#fff"/>
+    <path d="M45 71 Q50 75 55 71" fill="none" stroke="#3A322A" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>`;
+}
+
+/* ===================== 工具 ===================== */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function renderTop(){
+  document.getElementById('coinBal').textContent = Math.round(coins);
+  const collected = species.filter(s => dex[s.id] > 0).length;
+  const score = species.reduce((sum,s) => sum + (dex[s.id] > 0 ? tierMeta[s.tier].score : 0), 0);
+  document.getElementById('statCollected').textContent = collected;
+  document.getElementById('statScore').textContent = score;
+  document.getElementById('statHarvest').textContent = totalHarvest;
+  document.getElementById('dexProgress').textContent = `(${collected}/${species.length})`;
+}
+
+/* 天氣列:顯示今日天氣 + 祈天改天氣(10幣) */
+let prayPanelOpen = false;
+const PRAY_COST = 10;
+function renderWeather(){
+  const w = weathers.find(x => x.id === todayWeather);
+  const bar = document.getElementById('weatherBar');
+  // 各天氣的解鎖提示語
+  const hintMap = {
+    sunny:  '晴天:日出芝、玉山之心等偏好晴朗',
+    fog:    '濃霧:霧夜芝、彩虹芝、阿里山雲海現蹤',
+    thunder:'打雷:雷紋芝、千年野生的觸發日',
+    moon:   '滿月:烏心夜光、滿月芝、樟芝之王',
+    meteor: '流星雨:流星芝、雪山萬年根的稀有時機'
+  };
+  let html = `<div class="weather-now"><span class="wicon">${w.icon}</span>今日天氣 · ${w.label}</div>
+    <div class="weather-desc">${hintMap[w.id]}</div>
+    <button class="pray-btn" id="prayToggle">🔮 祈天改運 (${PRAY_COST}幣)</button>`;
+  if(prayPanelOpen){
+    html += `<div class="pray-panel">`;
+    weathers.forEach(x => {
+      const cur = x.id === todayWeather;
+      html += `<button class="pray-opt" data-weather="${x.id}" ${cur?'disabled':''} style="${cur?'opacity:0.4;':''}">${x.icon} ${x.label}</button>`;
+    });
+    html += `</div>`;
+  }
+  bar.innerHTML = html;
+
+  document.getElementById('prayToggle').addEventListener('click', () => {
+    if(coins < PRAY_COST){ toast(`芝靈幣不足,祈天需 ${PRAY_COST} 幣`); return; }
+    prayPanelOpen = !prayPanelOpen;
+    renderWeather();
+  });
+  if(prayPanelOpen){
+    bar.querySelectorAll('.pray-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if(btn.disabled) return;
+        if(coins < PRAY_COST){ toast(`芝靈幣不足`); return; }
+        coins -= PRAY_COST;
+        todayWeather = btn.dataset.weather;
+        prayPanelOpen = false;
+        renderTop();
+        renderWeather();
+        renderSlots();
+        const nw = weathers.find(x => x.id === todayWeather);
+        toast(`🔮 祈天成功!天氣轉為 ${nw.icon} ${nw.label}`);
+      });
+    });
+  }
+}
+
+/* ===================== 拉霸系統 ===================== */
+function runGacha(idx, woodId, winnerId, hum, temp, weather){
+  gachaBusy = true;
+  const wood = woods.find(w => w.id === woodId);
+  const overlay = document.getElementById('gachaOverlay');
+  const track = document.getElementById('reelTrack');
+  const box = document.getElementById('gachaBox');
+  const result = document.getElementById('gachaResult');
+  const plantBtn = document.getElementById('gachaPlantBtn');
+
+  const humLabel = humidities.find(h => h.id === hum).label;
+  const tempLabel = temperatures.find(t => t.id === temp).label;
+  const weaObj = weathers.find(x => x.id === weather);
+  document.getElementById('gachaWood').textContent = `${wood.name} ${'★'.repeat(wood.stars)} · ${humLabel} · ${tempLabel} · ${weaObj.icon}${weaObj.label}`;
+  document.getElementById('gachaResult').classList.remove('show');
+  document.getElementById('gachaResult').textContent = '';
+  plantBtn.classList.remove('show');
+  box.querySelector('.gacha-title').textContent = '🎰 培育開獎中…';
+
+  // 捲軸內容:當前條件下「合格」的品種(而非整個木頭池)
+  const elig = eligiblePools(woodId, hum, temp, weather);
+  let poolIds = [];
+  ['common','rare','epic','legendary'].forEach(t => { poolIds = poolIds.concat(elig[t]); });
+  if(poolIds.length === 0) poolIds = [winnerId];
+
+  const CARD_W = 118; // 110 + 邊距8
+  const reelItems = [];
+  const TOTAL = 34; // 捲動卡片數
+  for(let i = 0; i < TOTAL; i++){
+    // 前面隨機混入問號卡(約 30%)
+    if(Math.random() < 0.3){
+      reelItems.push('__mystery__');
+    } else {
+      reelItems.push(poolIds[Math.floor(Math.random()*poolIds.length)]);
+    }
+  }
+  // 中獎款固定放在倒數第 4 張(讓它停在中間指針)
+  const winIndex = TOTAL - 4;
+  reelItems[winIndex] = winnerId;
+
+  // 渲染卡片
+  track.innerHTML = reelItems.map(id => {
+    if(id === '__mystery__'){
+      return `<div class="reel-card"><div style="font-size:34px;color:var(--muted);">?</div><div class="rc-name">???</div></div>`;
+    }
+    const sp = species.find(x => x.id === id);
+    const m = tierMeta[sp.tier];
+    return `<div class="reel-card" style="border-color:${m.color};"><div>${mushSVG(id, 62)}</div><div class="rc-name" style="color:${m.color};">${m.label}</div></div>`;
+  }).join('');
+
+  overlay.classList.add('show');
+
+  // 計算停止位移:讓 winIndex 卡片置中
+  const windowW = document.querySelector('.reel-window').offsetWidth || 400;
+  const centerOffset = windowW/2 - CARD_W/2;
+  const finalX = -(winIndex * CARD_W) + centerOffset;
+
+  // 動畫:先瞬間歸零,再用 transition 捲到 finalX
+  track.style.transition = 'none';
+  track.style.transform = 'translateX(0px)';
+  void track.offsetWidth; // 強制 reflow
+  track.style.transition = 'transform 3s cubic-bezier(0.12, 0.75, 0.15, 1)';
+  track.style.transform = `translateX(${finalX}px)`;
+
+  // 動畫結束後揭曉
+  setTimeout(() => {
+    const sp = species.find(x => x.id === winnerId);
+    const m = tierMeta[sp.tier];
+    box.querySelector('.gacha-title').textContent = '🎉 開獎結果';
+    result.innerHTML = `<span style="color:${m.color};">${m.label}</span> · ${sp.emoji} ${sp.name}`;
+    result.classList.add('show');
+    plantBtn.classList.add('show');
+
+    // 中獎特效分級
+    if(sp.tier === 'rare'){
+      box.classList.add('winflash');
+    } else if(sp.tier === 'epic'){
+      box.classList.add('winflash');
+      spawnConfetti(box, 14);
+    } else if(sp.tier === 'legendary'){
+      box.classList.add('winflash');
+      spawnConfetti(box, 40);
+    }
+    setTimeout(() => box.classList.remove('winflash'), 2100);
+
+    // 綁定種入
+    plantBtn.onclick = () => {
+      overlay.classList.remove('show');
+      slots[idx] = {wood:woodId, species:winnerId, start:Date.now(), water:false, wTimer:null};
+      scheduleWater(idx);
+      gachaBusy = false;
+      renderSlots();
+      const isNewHint = dex[winnerId] === 0 ? '(新品種!)' : '';
+      toast(`🌱 ${sp.name} 開始培育 ${isNewHint}`);
+    };
+  }, 3100);
+}
+
+function spawnConfetti(box, count){
+  const colors = ['#E85A4A','#F2C84B','#3E88B0','#8B5FB5','#63A66B','#E68A3C'];
+  for(let i = 0; i < count; i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = (Math.random()*100) + '%';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.animation = `fall ${1.2 + Math.random()*1.2}s ease-in ${Math.random()*0.4}s forwards`;
+    box.appendChild(c);
+    setTimeout(() => c.remove(), 3200);
+  }
+}
+
+/* ===================== 培育槽渲染 ===================== */
+function scheduleWater(idx){
+  const slot = slots[idx];
+  if(!slot.species) return;
+  const delay = 6000 + Math.random() * 8000;
+  slot.wTimer = setTimeout(() => {
+    if(!slots[idx].species) return;
+    slots[idx].water = true;
+    renderSlots();
+    setTimeout(() => {
+      if(slots[idx].species && slots[idx].water){
+        slots[idx].water = false;
+        renderSlots();
+        scheduleWater(idx);
+      }
+    }, 4000);
+  }, delay);
+}
+
+function renderSlots(){
+  const container = document.getElementById('slots');
+  container.innerHTML = '';
+  slots.forEach((slot, idx) => {
+    const card = document.createElement('div');
+    card.className = 'slot';
+    if(!slot.species){
+      const set = slotSettings[idx];
+      let html = `<div class="slot-label">培育槽 ${idx+1} · 調整條件並選木頭</div>`;
+      // 濕度選擇
+      html += `<div class="var-group"><div class="var-label">濕度</div><div class="var-btns">`;
+      humidities.forEach(h => {
+        html += `<button class="var-btn ${set.hum===h.id?'active':''}" data-slot="${idx}" data-hum="${h.id}"><span class="vic">${h.icon}</span>${h.label}</button>`;
+      });
+      html += `</div></div>`;
+      // 溫度選擇
+      html += `<div class="var-group"><div class="var-label">溫度</div><div class="var-btns">`;
+      temperatures.forEach(t => {
+        html += `<button class="var-btn ${set.temp===t.id?'active':''}" data-slot="${idx}" data-temp="${t.id}"><span class="vic">${t.icon}</span>${t.label}</button>`;
+      });
+      html += `</div></div>`;
+      html += `<div class="wood-list">`;
+      woods.forEach(w => {
+        const canAfford = coins >= w.price && !gachaBusy;
+        // 該木頭在當前濕溫天氣下能解鎖到的最高稀有度
+        const hint = highestTierHint(w.id, set.hum, set.temp, todayWeather);
+        const hm = tierMeta[hint];
+        html += `<button class="wood-btn" data-slot="${idx}" data-wood="${w.id}" ${canAfford?'':'disabled'}>
+          <span class="wleft">
+            <span class="wood-chip" style="background:${w.color};"></span>
+            <span>${w.name}<br><span class="wood-stars">${'★'.repeat(w.stars)}${'☆'.repeat(5-w.stars)}</span> <span style="color:${hm.color};font-size:10px;">可達${hm.label}</span></span>
+          </span>
+          <span class="wood-price"><span class="coin-icon" style="width:15px;height:15px;font-size:8px;border-width:1px;">芝</span>${w.price}</span>
+        </button>`;
+      });
+      html += `</div>`;
+      card.innerHTML = html;
+    } else {
+      const s = species.find(x => x.id === slot.species);
+      const m = tierMeta[s.tier];
+      const elapsed = Date.now() - slot.start;
+      const pct = Math.min(100, Math.round((elapsed / s.grow) * 100));
+      const ready = pct >= 100;
+      if(ready) card.classList.add('ready');
+      const stageSize = 72 + (pct/100) * 50;
+      let html = `<div class="tier-badge" style="color:${m.color};background:${m.bg};">${m.label}</div>
+        <div class="mush-stage">${mushSVG(s.id, stageSize)}</div>
+        <div class="grow-name">${s.emoji} ${s.name}</div>
+        <div class="progress"><div class="fill" style="width:${pct}%;background:${m.color};"></div></div>`;
+      if(ready){
+        html += `<button class="harvest-btn" data-slot="${idx}">🎉 收成 +${s.reward}</button>`;
+      } else {
+        html += `<div class="grow-pct">培育中 ${pct}%</div>`;
+      }
+      if(slot.water){
+        html += `<button class="water-btn pop" data-water="${idx}" aria-label="澆水加速">💧</button>`;
+      }
+      card.innerHTML = html;
+    }
+    container.appendChild(card);
+  });
+
+  // 濕溫選擇按鈕
+  container.querySelectorAll('.var-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(gachaBusy) return;
+      const idx = +btn.dataset.slot;
+      if(btn.dataset.hum) slotSettings[idx].hum = btn.dataset.hum;
+      if(btn.dataset.temp) slotSettings[idx].temp = btn.dataset.temp;
+      renderSlots();
+    });
+  });
+
+  container.querySelectorAll('.wood-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(gachaBusy) return;
+      const idx = +btn.dataset.slot;
+      const wid = btn.dataset.wood;
+      const w = woods.find(x => x.id === wid);
+      if(coins < w.price) return;
+      coins -= w.price;
+      const set = slotSettings[idx];
+      renderTop();
+      renderSlots(); // 更新按鈕鎖定狀態
+      const winner = rollSpecies(wid, set.hum, set.temp, todayWeather);
+      runGacha(idx, wid, winner, set.hum, set.temp, todayWeather);
+    });
+  });
+
+  container.querySelectorAll('.harvest-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = +btn.dataset.slot;
+      const slot = slots[idx];
+      const s = species.find(x => x.id === slot.species);
+      coins += s.reward;
+      totalHarvest++;
+      const isNew = dex[s.id] === 0;
+      dex[s.id]++;
+      clearTimeout(slot.wTimer);
+      slots[idx] = {wood:null, species:null, start:0, water:false, wTimer:null};
+      renderTop();
+      renderSlots();
+      renderCollection();
+      if(isNew) toast(`🎊 新品種!「${s.name}」加入圖鑑!`);
+      else toast(`收成「${s.name}」 +${s.reward} 芝靈幣`);
+    });
+  });
+
+  container.querySelectorAll('.water-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = +btn.dataset.water;
+      const slot = slots[idx];
+      if(!slot.species) return;
+      const s = species.find(x=>x.id===slot.species);
+      slot.start -= s.grow * 0.08;
+      coins += 2;
+      slot.water = false;
+      renderTop();
+      renderSlots();
+      scheduleWater(idx);
+      toast('💧 澆水成功!生長加速');
+    });
+  });
+}
+
+/* ===================== 圖鑑 ===================== */
+function renderDexTabs(){
+  const tabs = [
+    {k:'all', label:'全部'},
+    {k:'common', label:'普通'},
+    {k:'rare', label:'稀有'},
+    {k:'epic', label:'史詩'},
+    {k:'legendary', label:'傳說'}
+  ];
+  const c = document.getElementById('dexTabs');
+  c.innerHTML = tabs.map(t =>
+    `<button class="dex-tab ${dexFilter===t.k?'active':''}" data-tab="${t.k}">${t.label}</button>`
+  ).join('');
+  c.querySelectorAll('.dex-tab').forEach(b => {
+    b.addEventListener('click', () => {
+      dexFilter = b.dataset.tab;
+      renderDexTabs();
+      renderCollection();
+    });
+  });
+}
+
+function renderCollection(){
+  const container = document.getElementById('collection');
+  const list = dexFilter === 'all' ? species : species.filter(s => s.tier === dexFilter);
+  let html = '';
+  list.forEach(s => {
+    const m = tierMeta[s.tier];
+    const count = dex[s.id] || 0;
+    if(count > 0){
+      html += `<div class="col-item">
+        ${mushSVG(s.id, 52)}
+        <div class="col-name">${s.name}</div>
+        <div class="col-count" style="color:${m.color};">${m.label} ×${count}</div>
+      </div>`;
+    } else {
+      html += `<div class="col-item locked">
+        <div class="locked-q">?</div>
+        <div class="col-name" style="color:var(--muted);">未收集</div>
+        <div class="col-count" style="color:${m.color};">${m.label}</div>
+      </div>`;
+    }
+  });
+  container.innerHTML = html;
+}
+
+/* ===================== 簽到 ===================== */
+document.getElementById('checkinBtn').addEventListener('click', function(){
+  if(checkedIn) return;
+  checkedIn = true;
+  coins += 15;
+  this.textContent = '今日已簽到 ✓';
+  this.disabled = true;
+  renderTop();
+  toast('簽到成功!+15 芝靈幣');
+});
+
+/* ===================== 啟動 ===================== */
+renderTop();
+renderWeather();
+renderSlots();
+renderDexTabs();
+renderCollection();
+setInterval(renderSlots, 400);
+</script>
+</body>
+</html>
