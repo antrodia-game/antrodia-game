@@ -184,6 +184,11 @@
   .col-item.locked{opacity:0.4;}
   .col-name{font-size:11px; margin-top:4px; line-height:1.25;}
   .col-count{font-size:11px; font-weight:700; margin-top:1px;}
+  .sell-btn{
+    margin-top:6px; font-size:10px; padding:4px 8px; border-radius:8px;
+    background:var(--gold-soft); color:#7A5A12; border:1px solid var(--gold); font-weight:500;
+  }
+  .sell-btn:hover{filter:brightness(1.04);}
   .locked-q{width:48px; height:48px; display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--muted);}
   .stat-row{display:flex; gap:12px; margin-bottom:4px; max-width:520px;}
   .stat{flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 10px; text-align:center;}
@@ -223,7 +228,10 @@
 <div class="section-title">🌱 培育槽</div>
 <div class="slots" id="slots"></div>
 
-<div class="section-title">📖 品種圖鑑 <span id="dexProgress" style="font-size:12px;color:var(--muted);font-weight:400;"></span></div>
+<div class="section-title" style="justify-content:space-between;">
+  <span>📖 品種圖鑑 <span id="dexProgress" style="font-size:12px;color:var(--muted);font-weight:400;"></span></span>
+  <button id="sellAllBtn" style="font-size:12px;padding:6px 14px;background:var(--gold);color:#5A4210;font-weight:700;">💰 一鍵清倉重複菇</button>
+</div>
 <div class="dex-tabs" id="dexTabs"></div>
 <div class="collection" id="collection"></div>
 
@@ -866,10 +874,17 @@ function renderCollection(){
     const m = tierMeta[s.tier];
     const count = dex[s.id] || 0;
     if(count > 0){
+      const dupes = count - 1; // 保留1隻典藏,其餘為可賣重複
+      const sellPrice = Math.floor(s.reward * 0.5);
+      let sellBtn = '';
+      if(dupes > 0){
+        sellBtn = `<button class="sell-btn" data-sell="${s.id}">賣重複 ×${dupes} (+${sellPrice*dupes})</button>`;
+      }
       html += `<div class="col-item">
         ${mushSVG(s.id, 52)}
         <div class="col-name">${s.name}</div>
         <div class="col-count" style="color:${m.color};">${m.label} ×${count}</div>
+        ${sellBtn}
       </div>`;
     } else {
       html += `<div class="col-item locked">
@@ -880,6 +895,22 @@ function renderCollection(){
     }
   });
   container.innerHTML = html;
+
+  container.querySelectorAll('.sell-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sid = btn.dataset.sell;
+      const s = species.find(x => x.id === sid);
+      const dupes = dex[sid] - 1;
+      if(dupes <= 0) return;
+      const sellPrice = Math.floor(s.reward * 0.5);
+      const total = sellPrice * dupes;
+      dex[sid] = 1; // 保留典藏
+      coins += total;
+      renderTop();
+      renderCollection();
+      toast(`💰 賣出 ${dupes} 隻重複的「${s.name}」 +${total} 芝靈幣`);
+    });
+  });
 }
 
 /* ===================== 簽到 ===================== */
@@ -891,6 +922,28 @@ document.getElementById('checkinBtn').addEventListener('click', function(){
   this.disabled = true;
   renderTop();
   toast('簽到成功!+15 芝靈幣');
+});
+
+/* ===================== 一鍵清倉重複菇 ===================== */
+document.getElementById('sellAllBtn').addEventListener('click', function(){
+  let totalCoins = 0, totalCount = 0;
+  species.forEach(s => {
+    const dupes = (dex[s.id] || 0) - 1;
+    if(dupes > 0){
+      const sellPrice = Math.floor(s.reward * 0.5);
+      totalCoins += sellPrice * dupes;
+      totalCount += dupes;
+      dex[s.id] = 1;
+    }
+  });
+  if(totalCount === 0){
+    toast('目前沒有重複的菇可以賣 🍄');
+    return;
+  }
+  coins += totalCoins;
+  renderTop();
+  renderCollection();
+  toast(`💰 清倉成功!賣出 ${totalCount} 隻重複菇,共 +${totalCoins} 芝靈幣`);
 });
 
 /* ===================== 啟動 ===================== */
